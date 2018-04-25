@@ -1,0 +1,450 @@
+<script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+<script type="text/javascript" src="https://code.jquery.com/jquery-1.12.4.js"></script>
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.7.2/Chart.bundle.min.js"></script>
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.7.2/Chart.min.js"></script>
+<script type="text/javascript" src="https://cdn.datatables.net/1.10.16/js/jquery.dataTables.min.js"></script>
+<script type="text/javascript" src="https://cdn.datatables.net/buttons/1.5.1/js/dataTables.buttons.min.js"></script>
+<script type="text/javascript" src="https://cdn.datatables.net/buttons/1.5.1/js/buttons.flash.min.js"></script>
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.1.3/jszip.min.js"></script> 
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.32/pdfmake.min.js"></script> 
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.32/vfs_fonts.js"></script> 
+<script type="text/javascript" src="https://cdn.datatables.net/buttons/1.5.1/js/buttons.html5.min.js"></script> 
+<script type="text/javascript" src="https://cdn.datatables.net/buttons/1.5.1/js/buttons.print.min.js"></script> 
+<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.16/css/jquery.dataTables.min.css">
+<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/buttons/1.5.1/css/buttons.dataTables.min.css">
+
+<style>
+    #filterDiv { margin: 0 auto; }
+    #filterTable { width: 55%; margin: 0 auto; }
+    #chartsTable { width: 100%; }
+    th.dt-center { text-align: center; }
+    label.filterLabel { font-weight: bold; }
+    table.dataTable.display thead th { padding:5px 15px 5px 5px; background-color:#28497e; color:#ffffff; } 
+    table.dataTable.display tbody tr:hover { background-color:#c0d7ea; }    
+    button.dt-button, input#resetBtn { font-size: 14px; padding-top: 5px; border-color: #444; margin-left: 0px; border-radius: 16px; }     
+</style>
+
+<script>  
+var arrTRData = [], arrFilteredTRData = [], arrMAJCOMs = [], arrInstallations = [], filterQuestions = [];
+var trQ1Y = trQ1N = trQ2Y = trQ2N = trQ3Y = trQ3N = trQ4Y = trQ4N = trQ5Y = trQ5N = 0;
+var status_TRData = spjs_Status = false;
+var ddMAJCOMs = ddInstallations = TRDataTableHead = TRDataTableBody = currSelectedMAJCOM = -1;
+var currSelectedInstallation = -1;
+
+
+
+/*$(document).ready(function() {
+    google.charts.load('current',  {'packages':['corechart']});
+    getTRData();
+    buildPage();
+});*/
+google.charts.load('current',  {'packages':['corechart']});
+getTRData();
+buildPage();
+	
+function buildPage() {
+	if(status_TRData) {
+        // doc ready and TR data received    
+        arrMAJCOMs.forEach(function(m, Idx) { $('#ddMAJCOM').append('<option value=' + Idx + '>' + m + '</option>'); });    
+        arrInstallations.forEach(function(obj, Idx) { $('#ddInstallation').append('<option value=' + Idx + '>' + obj.inst + '</option>'); });
+        updateCharts();              
+    }
+}
+function updateCharts() {  
+    // loop through the array, add question results up and build rows based on current selection
+    TRDataTableBody = TRDataTableHead = "";
+    trQ1Y = trQ1N = trQ2Y = trQ2N = trQ3Y = trQ3N = trQ4Y = trQ4N = trQ5Y = trQ5N = 0;     
+    arrFilteredTRData = [];
+    if (currSelectedInstallation != -1) {
+        // filter out all installations but the selected one
+        arrTRData.forEach(function(tr) {
+            if (findWithAttr(arrInstallations, "inst", tr.Title) == currSelectedInstallation) { arrFilteredTRData.push(tr); }            
+        });
+    } else if (currSelectedMAJCOM != -1) {
+        // filter out all MAJCOMs but the selected one 
+        arrTRData.forEach(function(tr) {
+            if (arrMAJCOMs.indexOf(tr.MAJCOM) == currSelectedMAJCOM) { arrFilteredTRData.push(tr); }
+        });
+    } else {
+        // add all rows to the filtered array if neither drop down has a value
+        arrTRData.forEach(function(tr) { arrFilteredTRData.push(tr); });
+    }
+    // loop through each - question filter - and test each item in the filtered TR Data array and push into sub array, repeat for each question filter 
+    if (filterQuestions && filterQuestions.length>0) {
+        var arrSubFilteredTRData = [];
+        for (var i=0;i<filterQuestions.length;i++) {  
+            if (i>0) { arrFilteredTRData = arrSubFilteredTRData; arrSubFilteredTRData = []; }                
+            switch (filterQuestions[i].name) {
+                case "q1":
+                    arrFilteredTRData.forEach(function(tr) {                        
+                        // if q1 value matches qFilter then push it
+                        if (filterQuestions[i].val=="Yes" && tr.qA==1) { arrSubFilteredTRData.push(tr); }
+                        if (filterQuestions[i].val=="No" && tr.qA==0) { arrSubFilteredTRData.push(tr); }
+                    });
+                    break;  
+                case "q2":
+                    arrFilteredTRData.forEach(function(tr) {        
+                        if (filterQuestions[i].val=="Yes" && tr.qB==1) { arrSubFilteredTRData.push(tr); }
+                        if (filterQuestions[i].val=="No" && tr.qB==0) { arrSubFilteredTRData.push(tr); }
+                    });
+                    break;  
+                case "q3":
+                    arrFilteredTRData.forEach(function(tr) {        
+                        if (filterQuestions[i].val=="Yes" && tr.qC==1) { arrSubFilteredTRData.push(tr); }
+                        if (filterQuestions[i].val=="No" && tr.qC==0) { arrSubFilteredTRData.push(tr); }
+                    });
+                    break;  
+                case "q4":
+                    arrFilteredTRData.forEach(function(tr) {         
+                        if (filterQuestions[i].val=="Yes" && tr.qD==1) { arrSubFilteredTRData.push(tr); }
+                        if (filterQuestions[i].val=="No" && tr.qD==0) { arrSubFilteredTRData.push(tr); }
+                    });
+                    break;  
+                case "q5":
+                    arrFilteredTRData.forEach(function(tr) {          
+                        if (filterQuestions[i].val=="Yes" && tr.qE==1) { arrSubFilteredTRData.push(tr); }
+                        if (filterQuestions[i].val=="No" && tr.qE==0) { arrSubFilteredTRData.push(tr); }
+                    });
+            }
+        }
+        // add up un-subfiltered scores and build table rows
+        arrSubFilteredTRData.forEach(function(tr) {
+            if (tr.qA == 1) { trQ1Y++; }
+            if (tr.qB == 1) { trQ2Y++; }
+            if (tr.qC == 1) { trQ3Y++; }
+            if (tr.qD == 1) { trQ4Y++; }
+            if (tr.qE == 1) { trQ5Y++; }
+            if (tr.qA == 0) { trQ1N++; }
+            if (tr.qB == 0) { trQ2N++; }
+            if (tr.qC == 0) { trQ3N++; }
+            if (tr.qD == 0) { trQ4N++; }
+            if (tr.qE == 0) { trQ5N++; }
+            TRDataTableBody += "<tr><td>" + tr.MAJCOM + "</td><td>" + tr.Title + "</td>";
+            TRDataTableBody += "<td>" + setVal(tr.qA) + "</td><td>" + setVal(tr.qB) + "</td><td>" + setVal(tr.qC) + "</td><td>" + setVal(tr.qD) + "</td><td>" + setVal(tr.qE) + "</td></tr>";
+        });         
+    } else {
+        // add up subfiltered scores and build table rows
+        arrFilteredTRData.forEach(function(tr) {
+            if (tr.qA == 1) { trQ1Y++; }
+            if (tr.qB == 1) { trQ2Y++; }
+            if (tr.qC == 1) { trQ3Y++; }
+            if (tr.qD == 1) { trQ4Y++; }
+            if (tr.qE == 1) { trQ5Y++; }
+            if (tr.qA == 0) { trQ1N++; }
+            if (tr.qB == 0) { trQ2N++; }
+            if (tr.qC == 0) { trQ3N++; }
+            if (tr.qD == 0) { trQ4N++; }
+            if (tr.qE == 0) { trQ5N++; }
+            TRDataTableBody += "<tr><td>" + tr.MAJCOM + "</td><td>" + tr.Title + "</td>";
+            TRDataTableBody += "<td>" + setVal(tr.qA) + "</td><td>" + setVal(tr.qB) + "</td><td>" + setVal(tr.qC) + "</td><td>" + setVal(tr.qD) + "</td><td>" + setVal(tr.qE) + "</td></tr>";
+        }); 
+    }
+    // render charts
+    google.charts.setOnLoadCallback(drawPieChart1); 
+    google.charts.setOnLoadCallback(drawPieChart2); 
+    google.charts.setOnLoadCallback(drawPieChart3); 
+    google.charts.setOnLoadCallback(drawPieChart4); 
+    google.charts.setOnLoadCallback(drawPieChart5); 
+
+    // build table header
+    TRDataTableHead += "<table cellpadding='0' cellspacing='0' border='0' class='display hover stripe' id='TRDataTbl'><thead><tr><th id='col0'>MAJCOM</th><th class='col1'>Installation</th>";
+    TRDataTableHead += "<th class='col2'>Does the Installation have an ITRP?</th>";
+    TRDataTableHead += "<th class='col3'>Has the installation designated an ITLO?</th>";
+    TRDataTableHead += "<th class='col4'>Has the installation consulted with identified Tribes or NHOs?</th>";
+    TRDataTableHead += "<th class='col5'>Did the installation commander (or designated O-6 representative) conduct meetings with tribal leaders during the past year?</th>";
+    TRDataTableHead += "<th class='col6'>Has the installation consulted with Tribes about Reserved Treaty Rights to Natural Resources?</th>";
+    TRDataTableHead += "</tr></thead><tbody>";
+
+    // render Data table
+    $("#TRDataTableDiv").html(TRDataTableHead + TRDataTableBody + "</tbody></table>");
+    $('#TRDataTbl').DataTable({
+		"bPaginate":false, 
+        "sorting":[[1,"asc"]],
+        "bFilter": false,
+		"dom": 'Bfrtip',
+        "buttons": ['copy','excel',        
+            {extend: 'pdfHtml5', orientation: 'landscape', title:'Tribal Relations Data', 'customize': 
+                function(doc) { doc.content[1].table.widths = [ '8%', '20%', '8%', '8%', '16%', '20%', '20%']; } }                
+        ],
+        "columnDefs": [{"className": "dt-center", "targets": [2,3,4,5,6]}]
+    });
+}
+function updateDropDowns(dd, val) {
+    filterQuestions = [];
+    if (dd === "ddMAJCOM") {
+        currSelectedMAJCOM = val;
+        currSelectedInstallation = -1; 
+        $('#ddInstallation').empty();
+        $('#ddInstallation').append('<option value=-1>All Installations</option>'); 
+        if (currSelectedMAJCOM != -1) {       
+            // loop through all installations and add just ones that are in the selected MAJCOM
+            arrInstallations.forEach(function(obj, Idx) {
+                if (obj.maj == currSelectedMAJCOM) { 
+                    $('#ddInstallation').append('<option value=' + Idx + '>' + obj.inst + '</option>'); } 
+            });  
+                } else { arrInstallations.forEach(function(obj, Idx) { 
+                    $('#ddInstallation').append('<option value=' + Idx + '>' + obj.inst + '</option>'); });  
+                }        
+    } else if (dd === "ddInstallation") {
+        currSelectedInstallation = val;
+        if (currSelectedInstallation != -1) {
+            currSelectedMAJCOM = arrInstallations[parseInt(currSelectedInstallation)].maj;
+            $("#ddMAJCOM").val(currSelectedMAJCOM);
+        }  
+    }
+    updateCharts();
+}
+var opt = {title:'','legend': {'position':'bottom','alignment':'center'},'width':240, 'height':450,'chartArea': {'width': '85%', 'height': '75%'},colors: ['#008000', '#ff0000']};             
+function drawPieChart1() {
+    var data = new google.visualization.DataTable();
+    data.addColumn('string', 'Response');
+    data.addColumn('number', 'Qty');
+    data.addRows([["Yes", trQ1Y],["No", trQ1N]]);
+    opt.title = 'Does the Installation have an ITRP?'; 
+    var chart1 = new google.visualization.PieChart(document.getElementById('piechart1'));
+    function selectHandler() {
+        var selectedItem = chart1.getSelection()[0];
+        if (selectedItem) {
+            filterQuestions.push({name:"q1", val: data.getValue(selectedItem.row, 0)});
+            updateCharts();
+        }
+    }
+    google.visualization.events.addListener(chart1, 'select', selectHandler); 
+    google.visualization.events.addListener(chart1, 'onmouseover', chart1MouseOver); 
+    google.visualization.events.addListener(chart1, 'onmouseout', chart1MouseOut); 
+    chart1.draw(data, opt);
+} 
+function drawPieChart2() {
+    var data = new google.visualization.DataTable();
+    data.addColumn('string', 'Response');
+    data.addColumn('number', 'Qty');
+    data.addRows([["Yes", trQ2Y],["No", trQ2N]]);
+    opt.title = 'Has the installation designated an ITLO?';
+    var chart2 = new google.visualization.PieChart(document.getElementById('piechart2'));
+    function selectHandler() {
+        var selectedItem = chart2.getSelection()[0];
+        if (selectedItem) {
+            filterQuestions.push({name:"q2", val: data.getValue(selectedItem.row, 0)});
+            updateCharts();
+        }
+    }
+    google.visualization.events.addListener(chart2, 'select', selectHandler); 
+    google.visualization.events.addListener(chart2, 'onmouseover', chart2MouseOver); 
+    google.visualization.events.addListener(chart2, 'onmouseout', chart2MouseOut); 
+    chart2.draw(data, opt);
+} 
+function drawPieChart3() {
+    var data = new google.visualization.DataTable();
+    data.addColumn('string', 'Response');
+    data.addColumn('number', 'Qty');
+    data.addRows([["Yes", trQ3Y],["No", trQ3N]]);
+    opt.title = 'Has the installation consulted with identified Tribes or NHOs?';
+    var chart3 = new google.visualization.PieChart(document.getElementById('piechart3'));
+    function selectHandler() {
+        var selectedItem = chart3.getSelection()[0];
+        if (selectedItem) {
+            filterQuestions.push({name:"q3", val: data.getValue(selectedItem.row, 0)});
+            updateCharts();
+        }
+    }
+    google.visualization.events.addListener(chart3, 'select', selectHandler); 
+    google.visualization.events.addListener(chart3, 'onmouseover', chart3MouseOver); 
+    google.visualization.events.addListener(chart3, 'onmouseout', chart3MouseOut); 
+    chart3.draw(data, opt);   
+} 
+function drawPieChart4() {
+    var data = new google.visualization.DataTable();
+    data.addColumn('string', 'Response');
+    data.addColumn('number', 'Qty');
+    data.addRows([["Yes", trQ4Y],["No", trQ4N]]);
+    opt.title = 'Did the installation commander (or designated O-6 representative) conduct meetings with tribal leaders during the past year?';
+    var chart4 = new google.visualization.PieChart(document.getElementById('piechart4'));
+    function selectHandler() {
+        var selectedItem = chart4.getSelection()[0];
+        if (selectedItem) {
+            filterQuestions.push({name:"q4", val: data.getValue(selectedItem.row, 0)});
+            updateCharts();
+        }
+    }
+    google.visualization.events.addListener(chart4, 'select', selectHandler); 
+    google.visualization.events.addListener(chart4, 'onmouseover', chart4MouseOver); 
+    google.visualization.events.addListener(chart4, 'onmouseout', chart4MouseOut); 
+    chart4.draw(data, opt);
+} 
+function drawPieChart5() {
+    var data = new google.visualization.DataTable();
+    data.addColumn('string', 'Response');
+    data.addColumn('number', 'Qty');
+    data.addRows([["Yes", trQ5Y],["No", trQ5N]]);
+    opt.title = 'Has the installation consulted with Tribes about Reserved Treaty Rights to Natural Resources?';
+    var chart5 = new google.visualization.PieChart(document.getElementById('piechart5'));
+    function selectHandler() {
+        var selectedItem = chart5.getSelection()[0];
+        if (selectedItem) {
+            filterQuestions.push({name:"q5", val: data.getValue(selectedItem.row, 0)});
+            updateCharts();
+        }
+    }
+    google.visualization.events.addListener(chart5, 'select', selectHandler); 
+    google.visualization.events.addListener(chart5, 'onmouseover', chart5MouseOver); 
+    google.visualization.events.addListener(chart5, 'onmouseout', chart5MouseOut);  
+    google.visualization.events.addListener(chart5, 'ready', chart5Ready); 
+    chart5.draw(data, opt);
+} 
+function resetFilter() {
+    currSelectedMAJCOM = -1;
+    currSelectedInstallation = -1;     
+    filterQuestions = [];
+    arrInstallations.forEach(function(obj, Idx) {
+        $('#ddInstallation').append('<option value=' + Idx + '>' + obj.inst + '</option>');  
+    });     
+    $("#ddMAJCOM").val(-1);
+    $("#ddInstallation").val(-1);
+    updateCharts();
+}
+function fillArrays() {
+    arrTRData.forEach(function(obj) {
+        if (arrMAJCOMs.indexOf(obj.MAJCOM)=== -1) {
+            arrMAJCOMs.push(obj.MAJCOM);
+        }
+        if (arrInstallations.indexOf(obj.Title)=== -1) {
+            arrInstallations.push({maj:arrMAJCOMs.indexOf(obj.MAJCOM), inst: obj.Title});
+        }
+    });	
+}
+function setVal(val){
+    if (isNaN(val)) {
+        return "";
+    } else {
+        if (val == 1) { return "Y"; } else { return "N"; }
+    }
+}
+function findWithAttr(array, attr, value) {
+    for(var i = 0; i < array.length; i += 1) {
+        if(array[i][attr] === value) {
+            return i;
+        }
+    }
+    return -1;
+}
+function getTRData() {
+	/*$.ajax({
+		url: _spPageContextInfo.webAbsoluteUrl + "/_api/Web/Lists/GetByTitle('TRData')/items?$select=Id,MAJCOM,Title,ICRMP_Reqd,qA,qB,qC,qD,qE&$top=5000",
+	    type: "GET",
+	    dataType: "json",
+	    async: true,
+	    headers: {"Accept":"application/json; odata=verbose"},
+	    success: function(data){
+			arrTRData = $.merge(arrTRData, data.d.results);
+            if(data.d.__next) {
+                getTRData(data.d.__next); 
+            } 
+            if(!data.d.__next) {
+                fillArrays();
+                status_TRData = true;
+                buildPage();
+            }
+	    },
+        error: function(XMLHttpRequest) { 
+            console.warn("getTRData failed!");
+            console.warn(XMLHttpRequest.responseText);	
+        } 
+	});*/
+	var org = ["ACC","AFMC","AETC","AFSPC","PACAF"]
+	var ans = [1,0]
+	
+	var max=100;
+	for(i=0;i<max;i++){
+		var tOrg = org[Math.floor(Math.random() * org.length)];
+		var tTitle = "Org - "+i
+		var tA = ans[Math.floor(Math.random() * ans.length)];
+		var tB = ans[Math.floor(Math.random() * ans.length)];
+		var tC = ans[Math.floor(Math.random() * ans.length)];
+		var tD = ans[Math.floor(Math.random() * ans.length)];
+		var tE = ans[Math.floor(Math.random() * ans.length)];
+		trObj={
+			Id:i,
+			MAJCOM:tOrg,
+			Title:tTitle,
+			ICRMP_Reqd:1,
+			qA:tA,
+			qB:tB,
+			qC:tC,
+			qD:tD,
+			qE:tE		
+		}
+		arrTRData.push(trObj)
+	}
+	fillArrays();
+	status_TRData = true;
+	buildPage();
+}
+function chart1MouseOver() { $('#piechart1').css('cursor','pointer'); }  
+function chart1MouseOut() { $('#piechart1').css('cursor','default'); } 
+function chart2MouseOver() { $('#piechart2').css('cursor','pointer'); }  
+function chart2MouseOut() { $('#piechart2').css('cursor','default'); } 
+function chart3MouseOver() { $('#piechart3').css('cursor','pointer'); }  
+function chart3MouseOut() { $('#piechart3').css('cursor','default'); } 
+function chart4MouseOver() { $('#piechart4').css('cursor','pointer'); }  
+function chart4MouseOut() { $('#piechart4').css('cursor','default'); } 
+function chart5MouseOver() { $('#piechart5').css('cursor','pointer'); }  
+function chart5MouseOut() { $('#piechart5').css('cursor','default'); } 
+function chart5Ready() { waitDialog.close(SP.UI.DialogResult.OK); }
+
+
+var ctx = document.getElementById('myChart');
+var myPieChart = new Chart(ctx,{
+    type: 'pie',
+    data: data = {
+        datasets: [{
+            data: [10, 20, 30]
+        }],
+    
+        // These labels appear in the legend and in the tooltips when hovering different arcs
+        labels: [
+            'Red',
+            'Yellow',
+            'Blue'
+        ]
+    },
+    options: Chart.defaults.pie
+});
+
+</script>
+
+<div id="container">
+    <div id="filterDiv">
+        <table id='filterTable'>
+            <tr>
+                <td id='filterTd1'><center><h2>Filter Criteria:</h2></center></td>
+                <td id='filterTd2'><center><label for='ddMAJCOM' class='filterLabel'>MAJCOM: </label>
+                    <select id='ddMAJCOM' onchange='updateDropDowns(this.id, this.value)'><option value=-1>All MAJCOMs</option></select></center></td>
+                <td id='filterTd3'><center><label for='ddInstallation' class='filterLabel'>Installation: </label>
+                    <select id='ddInstallation' onchange='updateDropDowns(this.id, this.value)'><option value=-1>All Installations</option></select></center></td>
+                <td id='filterTd4'><center><input onclick='resetFilter()' type='button' value='Reset' id='resetBtn'></center></td>
+            </tr>
+        </table>        
+    </div><br/>
+    <div id='newCharts'>
+        <canvas id="myChart"></canvas>       
+    </div>
+    <div id="chartsHeaderDiv"></div>
+    <div id="chartsDiv">
+        <table id='chartsTable'>
+            <tr>
+                <td id='piechart1' class='chartTD'></td>
+                <td id='piechart2' class='chartTD'></td>
+                <td id='piechart3' class='chartTD'></td>
+                <td id='piechart4' class='chartTD'></td>
+                <td id='piechart5' class='chartTD'></td>
+            </tr>
+        </table>
+    </div>
+    <div id="chartsFooterDiv"></div>
+    <div id='TRDataTableHeaderDiv'>
+        <h1>Report</h1><br/>
+
+    </div>
+    <div id='TRDataTableDiv'></div>
+    <div id='TRDataTableFooterDiv'></div>
+</div>
