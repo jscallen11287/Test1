@@ -389,7 +389,7 @@ function chart4MouseOver() { $('#piechart4').css('cursor','pointer'); }
 function chart4MouseOut() { $('#piechart4').css('cursor','default'); } 
 function chart5MouseOver() { $('#piechart5').css('cursor','pointer'); }  
 function chart5MouseOut() { $('#piechart5').css('cursor','default'); } 
-function chart5Ready() { waitDialog.close(SP.UI.DialogResult.OK); }
+function chart5Ready() { }
 
 
 var ctx = document.getElementById('myChart');
@@ -412,7 +412,7 @@ var myPieChart = new Chart(ctx,{
 
 </script>
 
-<div id="container">
+<div id="container" style"max-width:80%">
     <div id="filterDiv">
         <table id='filterTable'>
             <tr>
