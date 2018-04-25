@@ -148,11 +148,11 @@ function updateCharts() {
 
     // build table header
     TRDataTableHead += "<table cellpadding='0' cellspacing='0' border='0' class='display hover stripe' id='TRDataTbl'><thead><tr><th id='col0'>MAJCOM</th><th class='col1'>Installation</th>";
-    TRDataTableHead += "<th class='col2'>Does the Installation have an ITRP?</th>";
-    TRDataTableHead += "<th class='col3'>Has the installation designated an ITLO?</th>";
-    TRDataTableHead += "<th class='col4'>Has the installation consulted with identified Tribes or NHOs?</th>";
-    TRDataTableHead += "<th class='col5'>Did the installation commander (or designated O-6 representative) conduct meetings with tribal leaders during the past year?</th>";
-    TRDataTableHead += "<th class='col6'>Has the installation consulted with Tribes about Reserved Treaty Rights to Natural Resources?</th>";
+    TRDataTableHead += "<th class='col2'>Does the car have passenger air bags?</th>";
+    TRDataTableHead += "<th class='col3'>Does the car have side air bags?</th>";
+    TRDataTableHead += "<th class='col4'>Does the car have automatic braking system?</th>";
+    TRDataTableHead += "<th class='col5'>Does the car have push to start?</th>";
+    TRDataTableHead += "<th class='col6'>Is the car an alternate fuel source vehicle?</th>";
     TRDataTableHead += "</tr></thead><tbody>";
 
     // render Data table
@@ -200,7 +200,7 @@ function drawPieChart1() {
     data.addColumn('string', 'Response');
     data.addColumn('number', 'Qty');
     data.addRows([["Yes", trQ1Y],["No", trQ1N]]);
-    opt.title = 'Does the Installation have an ITRP?'; 
+    opt.title = 'Does the car have passenger air bags??'; 
     var chart1 = new google.visualization.PieChart(document.getElementById('piechart1'));
     function selectHandler() {
         var selectedItem = chart1.getSelection()[0];
@@ -219,7 +219,7 @@ function drawPieChart2() {
     data.addColumn('string', 'Response');
     data.addColumn('number', 'Qty');
     data.addRows([["Yes", trQ2Y],["No", trQ2N]]);
-    opt.title = 'Has the installation designated an ITLO?';
+    opt.title = 'Does the car have side air bags?';
     var chart2 = new google.visualization.PieChart(document.getElementById('piechart2'));
     function selectHandler() {
         var selectedItem = chart2.getSelection()[0];
@@ -238,7 +238,7 @@ function drawPieChart3() {
     data.addColumn('string', 'Response');
     data.addColumn('number', 'Qty');
     data.addRows([["Yes", trQ3Y],["No", trQ3N]]);
-    opt.title = 'Has the installation consulted with identified Tribes or NHOs?';
+    opt.title = 'Does the car have automatic braking system?';
     var chart3 = new google.visualization.PieChart(document.getElementById('piechart3'));
     function selectHandler() {
         var selectedItem = chart3.getSelection()[0];
@@ -257,7 +257,7 @@ function drawPieChart4() {
     data.addColumn('string', 'Response');
     data.addColumn('number', 'Qty');
     data.addRows([["Yes", trQ4Y],["No", trQ4N]]);
-    opt.title = 'Did the installation commander (or designated O-6 representative) conduct meetings with tribal leaders during the past year?';
+    opt.title = 'Does the car have push to start?';
     var chart4 = new google.visualization.PieChart(document.getElementById('piechart4'));
     function selectHandler() {
         var selectedItem = chart4.getSelection()[0];
@@ -276,7 +276,7 @@ function drawPieChart5() {
     data.addColumn('string', 'Response');
     data.addColumn('number', 'Qty');
     data.addRows([["Yes", trQ5Y],["No", trQ5N]]);
-    opt.title = 'Has the installation consulted with Tribes about Reserved Treaty Rights to Natural Resources?';
+    opt.title = 'Is the car an alternate fuel source vehicle?';
     var chart5 = new google.visualization.PieChart(document.getElementById('piechart5'));
     function selectHandler() {
         var selectedItem = chart5.getSelection()[0];
@@ -350,13 +350,14 @@ function getTRData() {
             console.warn(XMLHttpRequest.responseText);	
         } 
 	});*/
-	var org = ["ACC","AFMC","AETC","AFSPC","PACAF"]
+	var year = [2000,2001,2002,2003,2004,2005,2006,2007,2008,2009,2010,2011,2012,2013,2014,2015,2016,2017,2018];
+	var carBrand = ["Toyota","Honda","Ford","BMW","Acura","Kia","Subaru"]
 	var ans = [1,0]
 	
 	var max=100;
 	for(i=0;i<max;i++){
-		var tOrg = org[Math.floor(Math.random() * org.length)];
-		var tTitle = "Org - "+i
+		var tYear = year[Math.floor(Math.random() * year.length)];
+		var tBrand = carBrand[Math.floor(Math.random() * carBrand.length)];
 		var tA = ans[Math.floor(Math.random() * ans.length)];
 		var tB = ans[Math.floor(Math.random() * ans.length)];
 		var tC = ans[Math.floor(Math.random() * ans.length)];
@@ -364,8 +365,8 @@ function getTRData() {
 		var tE = ans[Math.floor(Math.random() * ans.length)];
 		trObj={
 			Id:i,
-			MAJCOM:tOrg,
-			Title:tTitle,
+			MAJCOM:tYear,
+			Title:tBrand,
 			ICRMP_Reqd:1,
 			qA:tA,
 			qB:tB,
@@ -409,7 +410,7 @@ var myPieChart = new Chart(ctx,{
     },
     options: Chart.defaults.pie
 });
-//
+
 </script>
 <center>
 	<div id="container" style="max-width:80%">
@@ -441,7 +442,7 @@ var myPieChart = new Chart(ctx,{
 			</table>
 		</div>
 		<div id="chartsFooterDiv"></div>
-		<div id='TRDataTableHeaderDiv'>
+		<div id='TRDataTableHeaderDiv' style="text-align: left;">
 			<h1>Report</h1><br/>
 
 		</div>
