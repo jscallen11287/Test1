@@ -411,40 +411,41 @@ var myPieChart = new Chart(ctx,{
 });
 
 </script>
+<center>
+	<div id="container" style="max-width:80%">
+		<div id="filterDiv">
+			<table id='filterTable'>
+				<tr>
+					<td id='filterTd1'><center><h2>Filter Criteria:</h2></center></td>
+					<td id='filterTd2'><center><label for='ddMAJCOM' class='filterLabel'>MAJCOM: </label>
+						<select id='ddMAJCOM' onchange='updateDropDowns(this.id, this.value)'><option value=-1>All MAJCOMs</option></select></center></td>
+					<td id='filterTd3'><center><label for='ddInstallation' class='filterLabel'>Installation: </label>
+						<select id='ddInstallation' onchange='updateDropDowns(this.id, this.value)'><option value=-1>All Installations</option></select></center></td>
+					<td id='filterTd4'><center><input onclick='resetFilter()' type='button' value='Reset' id='resetBtn'></center></td>
+				</tr>
+			</table>        
+		</div><br/>
+		<div id='newCharts'>
+			<canvas id="myChart"></canvas>       
+		</div>
+		<div id="chartsHeaderDiv"></div>
+		<div id="chartsDiv">
+			<table id='chartsTable'>
+				<tr>
+					<td id='piechart1' class='chartTD'></td>
+					<td id='piechart2' class='chartTD'></td>
+					<td id='piechart3' class='chartTD'></td>
+					<td id='piechart4' class='chartTD'></td>
+					<td id='piechart5' class='chartTD'></td>
+				</tr>
+			</table>
+		</div>
+		<div id="chartsFooterDiv"></div>
+		<div id='TRDataTableHeaderDiv'>
+			<h1>Report</h1><br/>
 
-<div id="container" style"max-width:80%">
-    <div id="filterDiv">
-        <table id='filterTable'>
-            <tr>
-                <td id='filterTd1'><center><h2>Filter Criteria:</h2></center></td>
-                <td id='filterTd2'><center><label for='ddMAJCOM' class='filterLabel'>MAJCOM: </label>
-                    <select id='ddMAJCOM' onchange='updateDropDowns(this.id, this.value)'><option value=-1>All MAJCOMs</option></select></center></td>
-                <td id='filterTd3'><center><label for='ddInstallation' class='filterLabel'>Installation: </label>
-                    <select id='ddInstallation' onchange='updateDropDowns(this.id, this.value)'><option value=-1>All Installations</option></select></center></td>
-                <td id='filterTd4'><center><input onclick='resetFilter()' type='button' value='Reset' id='resetBtn'></center></td>
-            </tr>
-        </table>        
-    </div><br/>
-    <div id='newCharts'>
-        <canvas id="myChart"></canvas>       
-    </div>
-    <div id="chartsHeaderDiv"></div>
-    <div id="chartsDiv">
-        <table id='chartsTable'>
-            <tr>
-                <td id='piechart1' class='chartTD'></td>
-                <td id='piechart2' class='chartTD'></td>
-                <td id='piechart3' class='chartTD'></td>
-                <td id='piechart4' class='chartTD'></td>
-                <td id='piechart5' class='chartTD'></td>
-            </tr>
-        </table>
-    </div>
-    <div id="chartsFooterDiv"></div>
-    <div id='TRDataTableHeaderDiv'>
-        <h1>Report</h1><br/>
-
-    </div>
-    <div id='TRDataTableDiv'></div>
-    <div id='TRDataTableFooterDiv'></div>
-</div>
+		</div>
+		<div id='TRDataTableDiv'></div>
+		<div id='TRDataTableFooterDiv'></div>
+	</div>
+</center>	
